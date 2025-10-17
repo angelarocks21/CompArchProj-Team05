@@ -1,0 +1,33 @@
+package vmCasheSim;
+
+public class MilestoneOne {
+	public static void main(String[] args) {
+		// TODO Auto-generated method stub
+		 // Example inputs i got from org pdf
+       int physMemMB = 1024;       // physical memory in MB
+       double systemUsePct = 75.0; // % memory used by system
+       int numTraceFiles = 3;      // number of trace files (.trc)
+       int pageSizeBytes = 4096;   // 4KB page size
+       int pageTableEntries = 512 * 1024; // 512K entries per table
+       
+       
+       // calculations
+       long physBytes = (long) physMemMB * 1024 * 1024;
+       long numPhysPages = physBytes / pageSizeBytes;
+       long pagesForSystem = Math.round((systemUsePct / 100.0) * numPhysPages);
+       int ptePhysPageBits = (int) Math.ceil(Math.log(numPhysPages) / Math.log(2));
+       int pteBits = 1 + ptePhysPageBits; // 1 valid bit + bits for physical page number
+       long totalRAM = (long) pageTableEntries * numTraceFiles * pteBits / 8;
+ 
+       
+       // formatted print
+       System.out.println("***** Physical Memory Calculated Values *****");
+       System.out.println();
+       System.out.printf("Number of Physical Pages:       %d%n", numPhysPages);
+       System.out.printf("Number of Pages for System:     %d%n", pagesForSystem);
+       System.out.printf("Size of Page Table Entry:       %d bits%n", pteBits);
+       System.out.printf("Total RAM for Page Table(s):    %d bytes%n", totalRAM);
+
+	}
+
+}
