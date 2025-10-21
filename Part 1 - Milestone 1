@@ -1,0 +1,82 @@
+/*
+ * VMCacheSim_Part1.java
+ * Author: Karin
+ * 
+ * Description:
+ * This file contains Part 1 of the VMCacheSim program:
+ * - Command-line argument parsing
+ * - Cache input parameters
+ * 
+ * Note:
+ * Please combine this code with Parts 2 and 3 when merging.
+ * Variable names (cache_size, block_size, etc.) have been standardized for consistency.
+ */
+ 
+import java.util.ArrayList;
+
+public class VMCacheSim {
+    public static void main(String[] args) {
+        int cache_size = 0;
+        int block_size = 0;
+        int associativity = 0;
+        String replacement_policy = "";
+        int physical_memory = 0;
+        int instructions_per_time_slice = 0;
+        double percent_memory_used = 0.0;
+        ArrayList<String> trace_files = new ArrayList<>();
+
+        
+        for (int i = 0; i < args.length; i++) {
+            switch (args[i]) {
+                case "-s":
+                    cache_size = Integer.parseInt(args[++i]);
+                    break;
+                case "-b":
+                    block_size = Integer.parseInt(args[++i]);
+                    break;
+                case "-a":
+                    associativity = Integer.parseInt(args[++i]);
+                    break;
+                case "-r":
+                    String policy_arg = args[++i];
+                    if (policy_arg.equalsIgnoreCase("rr")) {
+                        replacement_policy = "Round Robin";
+                    } else {
+                        replacement_policy = "Random Replacement";
+                    }
+                    break;
+                case "-p":
+                    physical_memory = Integer.parseInt(args[++i]);
+                    break;
+                case "-n":
+                    instructions_per_time_slice = Integer.parseInt(args[++i]);
+                    break;
+                case "-u":
+                    percent_memory_used = Double.parseDouble(args[++i]);
+                    break;
+                case "-f":
+                    trace_files.add(args[++i]);
+                    break;
+                default:
+                    System.out.println("Unknown argument: " + args[i]);
+            }
+        }
+
+        
+        System.out.println("\nCache Simulator - CS 3853 - Team 5\n");
+
+        System.out.println("Trace File(s):");
+        for (String file : trace_files) {
+            System.out.println(" " + file);
+        }
+
+        System.out.println("\n***** Cache Input Parameters *****\n");
+        System.out.printf("Cache Size:                      %d KB\n", cache_size);
+        System.out.printf("Block Size:                      %d bytes\n", block_size);
+        System.out.printf("Associativity:                   %d\n", associativity);
+        System.out.printf("Replacement Policy:              %s\n", replacement_policy);
+        System.out.printf("Physical Memory:                 %d MB\n", physical_memory);
+        System.out.printf("Percent Memory Used by System:   %.1f%%%n", percent_memory_used);
+        System.out.printf("Instructions / Time Slice:       %d%n\n", instructions_per_time_slice);
+    }
+}
