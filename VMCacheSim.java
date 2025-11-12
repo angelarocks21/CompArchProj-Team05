@@ -1,8 +1,22 @@
+import java.io.*;
+import java.util.*;
 
-import java.util.ArrayList;
+class MemoryAccess {
+    	long address;
+    	int length;
+
+		MemoryAccess(long address, int length) {
+			this.address = address;
+			this.length = length;
+		}
+
+		@Override
+		public String toString() {
+			return String.format("Address: 0x%X, Length: %d bytes", address, length);
+    	}
+}
 
 public class VMCacheSim {
-	
 	public static void main(String[] args) {
 		int cacheSizeKB = 512;
 	    int blockSize = 16;
@@ -52,7 +66,7 @@ public class VMCacheSim {
 	    System.out.println("Cache Simulator - CS 3853 - Team #05\n");
 	    System.out.println("Trace File(s):");
 	    for (String file : traceFiles) {
-	    	System.out.println(" " + file);
+	    	System.out.println("         " + file);
 	    }
 	    
 	    System.out.println("\n***** Cache Input Parameters *****\n");
@@ -112,6 +126,70 @@ public class VMCacheSim {
 		System.out.printf("Size of Page Table Entry:       %d bits%n", pteBits);
 		System.out.printf("Total RAM for Page Table(s):    %d bytes%n", totalRAM);
 		
-	}
+
+		System.out.println("\n***** VIRTUAL MEMORY SIMULATION RESULTS *****\n");
+		System.out.printf("Physical Pages Used By SYSTEM:  %d%n", pagesForSystem);
+		System.out.printf("Pages Available to User:        %d%n%n", numPhysPages - pagesForSystem);
+		
+		List<List<MemoryAccess>> allProcesses = new ArrayList<>();
+
+		for (String traceFile : traceFiles) {
+			List<MemoryAccess> accesses = new ArrayList<>();
+			System.out.println("Reading " + traceFile + "...");
+
+		try (BufferedReader br = new BufferedReader(new FileReader(traceFile))) {
+			String line;
+			int lineCount = 0;
+
+			while ((line = br.readLine()) != null) {
+				line = line.trim();
+				if (line.isEmpty()) continue;
+
+				if (line.startsWith("EIP")) {
+					String lengthStr = line.substring(5, 7); // characters 5-6
+					int length = Integer.parseInt(lengthStr, 16); // hex -> int
+
+					String addrStr = line.substring(10, 18); // characters 10-17
+					long address = Long.parseLong(addrStr, 16);
+
+					accesses.add(new MemoryAccess(address, length));
+				}
+
+				else if (line.startsWith("dstM")) {
+					String dstStr = line.substring(6, 14); // 6-13
+					if (!dstStr.equals("00000000") && !dstStr.equals("--------")) {
+						long dstAddr = Long.parseLong(dstStr, 16);
+						accesses.add(new MemoryAccess(dstAddr, 4)); // dstM always 4 bytes
+					}
+
+					String srcStr = line.substring(33, 41); // 24-31
+					if (!srcStr.equals("00000000") && !srcStr.equals("--------")) {
+						long srcAddr = Long.parseLong(srcStr, 16);
+						accesses.add(new MemoryAccess(srcAddr, 4)); // srcM always 4 bytes
+					}
+				}
+
+				lineCount++;
+				// Optional: stop early for testing small files
+				if (lineCount >= 20) break;
+			}
+
+			System.out.println("Parsed " + accesses.size() + " entries from " + traceFile);
+			System.out.println("Memory accesses:");
+                for (MemoryAccess ma : accesses) {
+                    System.out.println(ma);
+                }
+
+		} catch (IOException e) {
+			System.err.println("Error reading " + traceFile + ": " + e.getMessage());
+		}
+
+		allProcesses.add(accesses);
+
+		System.out.println("\nSummary of parsed traces:");
+		for (int i = 0; i < allProcesses.size(); i++) {
+			System.out.println("Process " + i + ": " + allProcesses.get(i).size() + " memory accesses");}
+	}}
 }
+
 
