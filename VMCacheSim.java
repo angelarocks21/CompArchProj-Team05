@@ -126,13 +126,21 @@ public class VMCacheSim {
 		System.out.printf("Size of Page Table Entry:       %d bits%n", pteBits);
 		System.out.printf("Total RAM for Page Table(s):    %d bytes%n", totalRAM);
 		
-
+		/*  MILESTONE TWO  */
+		
 		System.out.println("\n***** VIRTUAL MEMORY SIMULATION RESULTS *****\n");
 		System.out.printf("Physical Pages Used By SYSTEM:  %d%n", pagesForSystem);
-		System.out.printf("Pages Available to User:        %d%n%n", numPhysPages - pagesForSystem);
+		long pagesAvailableToUser = numPhysPages - pagesForSystem;
+		System.out.printf("Pages Available to User:         %d%n%n", pagesAvailableToUser);
 		
 		List<List<MemoryAccess>> allProcesses = new ArrayList<>();
-
+		
+        List<Long> mappedPages = new ArrayList<>();
+        long pageTableHits = 0;
+        long pagesFromFree = 0;
+        long totalPageFaults = 0;
+        long virtualPagesMapped = 0;
+		
 		for (String traceFile : traceFiles) {
 			List<MemoryAccess> accesses = new ArrayList<>();
 			System.out.println("Reading " + traceFile + "...");
@@ -185,11 +193,45 @@ public class VMCacheSim {
 		}
 
 		allProcesses.add(accesses);
+		
+		/*------------MAPPING----------------*/
+        
+        for (List<MemoryAccess> process : allProcesses) {
+            for (MemoryAccess access : process) {
+                long virtPage = access.address / pageSizeBytes;
 
+                boolean alreadyMapped = mappedPages.contains(virtPage);
+
+                if (!alreadyMapped) {
+                    virtualPagesMapped++;
+
+                    if (mappedPages.size() < pagesAvailableToUser) {
+                        // allocate a free page
+                        mappedPages.add(virtPage);
+                        pagesFromFree++;
+                    } else {
+                        // no free physical page → page fault
+                        totalPageFaults++;
+                    }
+                } else {
+                    // hit
+                    pageTableHits++;
+                }
+            }
+        }
+		
+	}
 		System.out.println("\nSummary of parsed traces:");
 		for (int i = 0; i < allProcesses.size(); i++) {
-			System.out.println("Process " + i + ": " + allProcesses.get(i).size() + " memory accesses");}
-	}}
+			System.out.println("Process " + i + ": " + allProcesses.get(i).size() + " memory accesses");
+		}
+		
+		// ---- Formatted Output Of Mapping ----
+        System.out.printf("Virtual Pages Mapped:           %d%n", virtualPagesMapped);
+        System.out.println("        ------------------------------");
+        System.out.printf("        Page Table Hits:        %d%n", pageTableHits);
+        System.out.printf("        Pages from Free:         %d%n", pagesFromFree);
+        System.out.printf("        Total Page Faults:       %d%n", totalPageFaults);
+	}
 }
-
 
